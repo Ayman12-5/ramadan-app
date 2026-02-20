@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>فوازير رمضان</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="index.css">
+</head>
+
+<body>
+
+  <div class="stars" id="stars"></div>
+
+  <div class="navbar">
+    <div class="logo">🌙 فوازير رمضان</div>
+    <div class="profile" onclick="goTo('profilePage')">
+   <button class="logout-btn" onclick="logoutUser()">تسجيل خروج</button>
+  <div class="avatar" id="navAvatar"></div>
+  <div>
+    <div id="navUserName">أيمن</div>
+    <div class="points">⭐ <span id="userPoints">0</span></div>
+  </div>
+</div>
+    </div>
+  </div>
+
+  <!-- Login -->
+  <div id="login" class="page active">
+    <div class="container" style="text-align:center;">
+      <h1>مرحبًا بك 👋</h1>
+      <button onclick="loginWithGoogle()">Login With Google</button>
+    </div>
+  </div>
+
+  <!-- Dashboard -->
+  <div id="dashboard" class="page">
+    <div class="container">
+      <h1>الرئيسية</h1>
+      <div class="card-grid">
+
+        <div class="card" onclick="goTo('azkarMain')">
+          <span>🌅</span>
+          الأذكار
+        </div>
+
+        <div class="card" onclick="goTo('questions')">
+          <span>❓</span>
+          الأسئلة
+        </div>
+
+        <div class="card" onclick="goTo('khatm')">
+          <span>📖</span>
+          ختم القرآن
+        </div>
+
+        <div class="card" onclick="goTo('tasks')">
+          <span>🎯</span>
+          المهام
+        </div>
+
+        <div class="khatma-progress-card">
+          <h2>📖 تقدم الختمة</h2>
+
+          <div class="khatma-number">
+            <span id="pagesRead">0</span> / 604
+          </div>
+
+          <div class="khatma-bar">
+            <div id="khatmaFill"></div>
+          </div>
+
+          <div class="khatma-percent">
+            <span id="khatmaPercent">0</span>%
+          </div>
+
+          <div id="khatmaStats" class="khatma-stats"></div>
+
+          <input type="number" id="pagesInput" placeholder="اكتب عدد الصفحات اللي قرأتها" min="0" max="604">
+
+          <button onclick="updateKhatma()">تحديث التقدم</button>
+        </div>
+
+        <!-- 🕌 مواعيد الصلاة -->
+        <div class="prayer-section">
+          <h2>🕌 مواعيد الصلاة اليوم</h2>
+
+          <div id="prayerDate" style="margin-bottom:10px;"></div>
+
+          <div class="prayer-grid" id="prayerGrid"></div>
+        </div>
+
+        <!-- 🏆 لوحة الصدارة -->
+        <div class="lead.erboard-section">
+          <h2>🏆 لوحة الصدارة</h2>
+          <div id="leaderboardList"></div>
+        </div>
+        <div class="khatma-progress-card">
+          <div>👑 ترتيبك</div>
+<div id="userRank">#--</div>
+<div>⭐ نقاطك: <span id="userPointsCard">0</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- صفحة الأذكار الرئيسية -->
+  <div id="azkarMain" class="page">
+    <div class="container">
+      <h1>📿 الأذكار</h1>
+      <div class="card-grid">
+        <div class="card" onclick="goTo('morningAzkar')">
+          <span>🌅</span>
+          أذكار الصباح
+        </div>
+        <div class="card" onclick="goTo('eveningAzkar')">
+          <span>🌇</span>
+          أذكار المساء
+        </div>
+        <div class="card" onclick="goTo('prayerAzkar')">
+          <span>🕌</span>
+          أذكار الصلاة
+        </div>
+      </div>
+      <button class="back" onclick="goTo('dashboard')">رجوع</button>
+    </div>
+  </div>
+
+  <!-- صفحات فرعية مؤقتة -->
+  <div id="morningAzkar" class="page">
+    <div class="container">
+      <h1>🌅 أذكار الصباح</h1>
+
+      <!-- التقدم العام -->
+      <div class="progress-box">
+        <div class="progress-text">
+          <span id="doneCount">0</span> / <span id="totalCount">0</span>
+          ( <span id="percent">0</span>% )
+        </div>
+        <div class="progress-bar">
+          <div id="progressFill"></div>
+        </div>
+      </div>
+
+      <div id="azkarContainer"></div>
+
+      <button class="back" onclick="goTo('azkarMain')">رجوع</button>
+    </div>
+  </div>
+
+  <div id="eveningAzkar" class="page">
+    <div class="container">
+      <h1>🌇 أذكار المساء</h1>
+
+      <div class="progress-box">
+        <div class="progress-text">
+          <span id="eveningDone">0</span> /
+          <span id="eveningTotal">0</span>
+          ( <span id="eveningPercent">0</span>% )
+        </div>
+        <div class="progress-bar">
+          <div id="eveningProgressFill"></div>
+        </div>
+      </div>
+
+      <div id="eveningContainer"></div>
+
+      <button class="back" onclick="goTo('azkarMain')">رجوع</button>
+    </div>
+  </div>
+
+  <div id="prayerAzkar" class="page">
+    <div class="container">
+      <h1>🕌 أذكار بعد الصلاة</h1>
+
+      <div class="progress-box">
+        <div class="progress-text">
+          <span id="prayerDone">0</span> /
+          <span id="prayerTotal">0</span>
+          ( <span id="prayerPercent">0</span>% )
+        </div>
+        <div class="progress-bar">
+          <div id="prayerProgressFill"></div>
+        </div>
+      </div>
+
+      <div id="prayerContainer"></div>
+
+      <button class="back" onclick="goTo('azkarMain')">رجوع</button>
+    </div>
+  </div>
+
+  <div id="questions" class="page">
+    <div class="container">
+      <h1>❓ مسابقة الشهر</h1>
+
+      <div class="progress-box">
+        <div class="progress-text">
+          اليوم <span id="quizDay">1</span> من 30
+        </div>
+      </div>
+
+      <!-- شاشة البداية -->
+      <div id="quizStartScreen" class="azkar-box" style="text-align:center;">
+        <h2>جاهز للتحدي؟ 😎</h2>
+        <button onclick="startQuiz()">ابدأ المسابقة</button>
+      </div>
+
+      <!-- العداد -->
+      <div id="timerBox" style="display:none; text-align:center; margin:15px;">
+        ⏳ الوقت المتبقي: <span id="timer">30</span> ثانية
+      </div>
+
+      <!-- الأسئلة -->
+      <div id="quizContainer" style="filter:blur(8px); pointer-events:none;"></div>
+
+      <button class="back" onclick="goTo('dashboard')">رجوع</button>
+    </div>
+  </div>
+
+  <div id="khatm" class="page">
+    <div class="container">
+      <h1>📖 ختم القرآن</h1>
+      <div class="khatma-box">
+        <p>ادخل عدد المرات اللي عايز تختم فيها القرآن</p>
+
+        <input type="number" id="khatmaCount" placeholder="مثال: 1" min="1">
+
+        <button onclick="generateKhatma()">احسب الخطة</button>
+      </div>
+
+      <div id="tableContainer"></div>
+
+      <button class="back" onclick="goTo('dashboard')">رجوع</button>
+    </div>
+  </div>
+
+  <div id="tasks" class="page">
+    <div class="container">
+      <h1>🎯 المهام اليومية</h1>
+
+      <div class="progress-box">
+        <div class="progress-text">
+          <span id="tasksDone">0</span> /
+          <span id="tasksTotal">0</span>
+          ( <span id="tasksPercent">0</span>% )
+        </div>
+        <div class="progress-bar">
+          <div id="tasksProgressFill"></div>
+        </div>
+      </div>
+
+      <div id="tasksContainer"></div>
+
+      <button class="back" onclick="goTo('dashboard')">رجوع</button>
+    </div>
+  </div>
+
+  <!-- Profile Page -->
+<div id="profilePage" class="page">
+  <div class="container">
+    <h1>👤 الملف الشخصي</h1>
+
+    <div class="khatma-box">
+
+      <div class="avatar" id="profileAvatar" style="margin:auto; width:100px; height:100px;"></div>
+
+      <p>تغيير الاسم</p>
+
+      <input type="text" id="newNameInput" placeholder="اكتب اسم جديد">
+
+      <button onclick="updateProfile()">حفظ التعديلات</button>
+
+    </div>
+
+    <button class="back" onclick="goTo('dashboard')">رجوع</button>
+  </div>
+</div>
+
+<footer class="main-footer">
+  <div class="footer-content">
+
+    <div class="footer-top">
+      Developed with ❤️ by 
+      <a href="https://www.facebook.com/ayman.n.abdelgawad?locale=ar_AR"
+         target="_blank"
+         class="footer-name">
+         Ayman Nasr
+      </a>
+    </div>
+
+    <hr>
+
+    <div class="footer-bottom">
+      "لا تنسونا من دعائكم"
+      <br>
+      © 2026 Ramadan App. All rights reserved
+    </div>
+
+  </div>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+  const supabaseUrl = "https://repcsnzaqrwmslzqwwja.supabase.co";
+  const supabaseKey = "sb_publishable_p_6uvVc0pOk3xpFqGfvHiA_Uu1g5rYc";
+
+ const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+</script>
+  <script src="main.js"></script>
+  <script src="azkar.js"></script>
+  <script src="tasks.js"></script>
+  <script src="khatma.js"></script>
+  <script src="prayer.js"></script>
+  <script src="quiz.js"></script>
+  <script src="leaderboard.js"></script>
+  
+</body>
+
+</html>
