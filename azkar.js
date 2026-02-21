@@ -1,0 +1,512 @@
+/* ================= أذكار الصباح ================= */
+const today = new Date().toISOString().split("T")[0];
+
+async function isTaskDone(taskName) {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) return false;
+
+  const { data } = await supabaseClient
+    .from("daily_actions")
+    .select("*")
+    .eq("user_id", user.id)
+    .eq("action_type", "task")
+    .eq("action_name", taskName)
+    .eq("action_date", today)
+    .single();
+
+  return !!data;
+}
+
+const azkar = [
+  {
+    text: `أَصبَحْنا على فِطرةِ الإسلامِ، وعلى كَلِمةِ الإخلاصِ، وعلى دِينِ نَبيِّنا محمَّدٍ صلَّى اللهُ عليه وسلَّمَ، وعلى مِلَّةِ أبِينا إبراهيمَ، حَنيفًا مُسلِمًا، وما كان مِنَ المُشرِكينَ.`,
+    count: 1
+  },
+  {
+    text: `بسمِ اللهِ الذي لا يَضرُ مع اسمِه شيءٌ في الأرضِ ولا في السماءِ وهو السميعُ العليمِ.`,
+    count: 3
+  },
+  {
+    text: `سبحانَ اللَّهِ وبحمدِه لا قوَّةَ إلَّا باللَّهِ، ما شاءَ اللَّهُ كانَ وما لم يشأ لم يَكن، أعلمُ أنَّ اللَّهَ على كلِّ شيءٍ قديرٌ وأنَّ اللَّهَ قد أحاطَ بِكلِّ شيءٍ علمًا.`,
+    count: 1
+  },
+  {
+    text: `سبحانَ اللَّهِ وبحمدِهِ.`,
+    count: 100
+  },
+  {
+    text: `اللَّهمَّ بِكَ أصبَحنا، وبِكَ أمسَينا، وبِكَ نحيا وبِكَ نموتُ وإليكَ المصيرُ.`,
+    count: 1
+  },
+  {
+    text: `رَضيتُ باللَّهِ ربًّا، وبالإسلامِ دينًا، وبِمُحمَّدٍ رسولًا.`,
+    count: 3
+  },
+  {
+    text: `حَسبيَ اللهُ لا إلهَ إلَّا هو، عليه تَوكَّلْتُ، وهو ربُّ العَرشِ العَظيمِ.`,
+    count: 7
+  },
+  {
+    text: `اللَّهُمَّ صَلِّ وَسَلِّمْ وَبَارِكْ على نَبِيِّنَا مُحمَّد.`,
+    count: 10
+  }
+];
+
+const container = document.getElementById("azkarContainer");
+const doneCountEl = document.getElementById("doneCount");
+const totalCountEl = document.getElementById("totalCount");
+const percentEl = document.getElementById("percent");
+const progressFill = document.getElementById("progressFill");
+
+async function updateProgress() {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+if (!user) return;
+
+const { data } = await supabaseClient
+  .from("daily_actions")
+  .select("*")
+  .eq("user_id", user.id)
+  .eq("action_type", "morning")
+  .eq("action_date", today);
+
+let done = data ? data.length : 0;
+
+  let total = azkar.length;
+  let percent = Math.round((done / total) * 100);
+
+  if (doneCountEl) doneCountEl.innerText = done;
+  if (totalCountEl) totalCountEl.innerText = total;
+  if (percentEl) percentEl.innerText = percent;
+  if (progressFill) progressFill.style.width = percent + "%";
+}
+
+if (container) {
+
+  (async () => {
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) return;
+
+  const { data: doneAzkar } = await supabaseClient
+    .from("daily_actions")
+    .select("action_name")
+    .eq("user_id", user.id)
+    .eq("action_type", "morning")
+    .eq("action_date", today);
+
+  const doneNames = doneAzkar ? doneAzkar.map(z => z.action_name) : [];
+
+  azkar.forEach((zekr, index) => {
+
+    let currentCount = zekr.count;
+
+    let box = document.createElement("div");
+    box.className = "azkar-box";
+
+    let text = document.createElement("div");
+    text.innerText = zekr.text;
+
+    let counter = document.createElement("div");
+    counter.className = "counter";
+
+    if (doneNames.includes(zekr.text)) {
+      counter.innerText = "تم يا معلم ✅";
+      counter.classList.add("done");
+    } else {
+      counter.innerText = currentCount;
+    }
+
+    counter.addEventListener("click", async () => {
+      if (currentCount > 1) {
+        currentCount--;
+        counter.innerText = currentCount;
+        
+      } else if (currentCount === 1) {
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) return;
+
+  // نشوف هل الذكر متسجل قبل كده
+  const { data } = await supabaseClient
+    .from("daily_actions")
+    .select("*")
+    .eq("user_id", user.id)
+    .eq("action_type", "morning")
+    .eq("action_name", zekr.text)
+    .eq("action_date", today)
+    .single();
+
+  if (data) return; // لو متسجل خلاص منديش نقاط
+
+  // نسجله في الجدول
+  await supabaseClient
+    .from("daily_actions")
+    .insert({
+      user_id: user.id,
+      action_type: "morning",
+      action_name: zekr.text,
+      action_date: today
+    });
+
+  currentCount = 0;
+  counter.innerText = "تم يا معلم ✅";
+  counter.classList.add("done", "shake");
+
+  
+
+  await addPoints(5);
+
+  updateProgress();
+}
+    });
+
+    let pBadge = document.createElement("div");
+    pBadge.style.marginTop = "12px";
+    pBadge.style.display = "inline-block";
+    pBadge.style.padding = "6px 10px";
+    pBadge.style.borderRadius = "12px";
+    pBadge.style.background = "rgba(232,176,74,0.12)";
+    pBadge.style.color = "#E8B04A";
+    pBadge.style.fontWeight = "bold";
+    pBadge.style.fontSize = "14px";
+    pBadge.innerText = `⭐ 5`;
+
+    box.appendChild(text);
+    box.appendChild(counter);
+    box.appendChild(pBadge);
+    container.appendChild(box);
+  });
+
+  updateProgress();
+   })();
+}
+/* ================= أذكار المساء ================= */
+
+const eveningAzkar = [
+  {
+    text: `قُلْ هُوَ اللَّهُ أَحَدٌ اللَّهُ الصَّمَدُ لَمْ يَلِدْ وَلَمْ يُولَدْ وَلَمْ يَكُن لَّهُ كُفُوًا أَحَدٌ`,
+    count: 3
+  },
+  {
+    text: `قُلْ أَعُوذُ بِرَبِّ الْفَلَقِ مِن شَرِّ مَا خَلَقَ وَمِن شَرِّ غَاسِقٍ إِذَا وَقَبَ وَمِن شَرِّ النَّفَّاثَاتِ فِي الْعُقَدِ وَمِن شَرِّ حَاسِدٍ إِذَا حَسَدَ`,
+    count: 3
+  },
+  {
+    text: `قُلْ أَعُوذُ بِرَبِّ النَّاسِ مَلِكِ النَّاسِ إِلَٰهِ النَّاسِ مِن شَرِّ الْوَسْوَاسِ الْخَنَّاسِ الَّذِي يُوَسْوِسُ فِي صُدُورِ النَّاسِ مِنَ الْجِنَّةِ وَالنَّاسِ`,
+    count: 3
+  },
+  {
+    text: `اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ لَّهُ مَا فِي السَّمَاوَاتِ وَالْأَرْضِ مَن ذَا الَّذِي يَشْفَعُ عِندَهُ إِلَّا بِإِذْنِهِ يَعْلَمُ مَا بَيْنَ أَيْدِيهِمْ وَمَا خَلْفَهُمْ وَلَا يُحِيطُونَ بِشَيْءٍ مِّنْ عِلْمِهِ إِلَّا بِمَا شَاءَ وَسِعَ كُرْسِيُّهُ السَّمَاوَاتِ وَالْأَرْضَ وَلَا يَئُودُهُ حِفْظُهُمَا وَهُوَ الْعَلِيُّ الْعَظِيمُ`,
+    count: 1
+  },
+  {
+    text: `آمَنَ الرَّسولُ بِمَا أُنزِلَ إِلَيْهِ مِن رَّبِّهِ وَالْمُؤْمِنُونَ كُلٌّ آمَنَ بِاللَّهِ وَمَلَائِكَتِهِ وَكُتُبِهِ وَرُسُلِهِ لَا نُفَرِّقُ بَيْنَ أَحَدٍ مِّن رُّسُلِهِ وَقَالُوا سَمِعْنَا وَأَطَعْنَا غُفْرَانَكَ رَبَّنَا وَإِلَيْكَ الْمَصِيرُ لَا يُكَلِّفُ اللَّهُ نَفْسًا إِلَّا وُسْعَهَا لَهَا مَا كَسَبَتْ وَعَلَيْهَا مَا اكْتَسَبَتْ رَبَّنَا لَا تُؤَاخِذْنَا إِن نَّسِينَا أَوْ أَخْطَأْنَا رَبَّنَا وَلَا تَحْمِلْ عَلَيْنَا إِصْرًا كَمَا حَمَلْتَهُ عَلَى الَّذِينَ مِن قَبْلِنَا رَبَّنَا وَلَا تُحَمِّلْنَا مَا لَا طَاقَةَ لَنَا بِهِ وَاعْفُ عَنَّا وَاغْفِرْ لَنَا وَارْحَمْنَا أَنتَ مَوْلَانَا فَانصُرْنَا عَلَى الْقَوْمِ الْكَافِرِينَ`,
+    count: 1
+  },
+  {
+    text: `حم تَنزِيلُ الْكِتَابِ مِنَ اللَّهِ الْعَزِيزِ الْعَلِيمِ غَافِرِ الذَّنبِ وَقَابِلِ التَّوْبِ شَدِيدِ الْعِقَابِ ذِي الطَّوْلِ لَا إِلَٰهَ إِلَّا هُوَ إِلَيْهِ الْمَصِيرُ`,
+    count: 1
+  }
+];
+
+const eveningContainer = document.getElementById("eveningContainer");
+const eveningDone = document.getElementById("eveningDone");
+const eveningTotal = document.getElementById("eveningTotal");
+const eveningPercent = document.getElementById("eveningPercent");
+const eveningProgressFill = document.getElementById("eveningProgressFill");
+
+async function updateEveningProgress() {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+if (!user) return;
+
+const { data } = await supabaseClient
+  .from("daily_actions")
+  .select("*")
+  .eq("user_id", user.id)
+  .eq("action_type", "evening")
+  .eq("action_date", today);
+
+let done = data ? data.length : 0;
+
+  let total = eveningAzkar.length;
+  let percent = Math.round((done / total) * 100);
+
+  if (eveningDone) eveningDone.innerText = done;
+  if (eveningTotal) eveningTotal.innerText = total;
+  if (eveningPercent) eveningPercent.innerText = percent;
+  if (eveningProgressFill) eveningProgressFill.style.width = percent + "%";
+}
+
+if (eveningContainer) {
+
+  (async () => {
+
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) return;
+
+    const { data: doneAzkar } = await supabaseClient
+      .from("daily_actions")
+      .select("action_name")
+      .eq("user_id", user.id)
+      .eq("action_type", "evening")
+      .eq("action_date", today);
+
+    const doneNames = doneAzkar ? doneAzkar.map(z => z.action_name) : [];
+
+    eveningAzkar.forEach((zekr, index) => {
+
+    let currentCount = zekr.count;
+
+    let box = document.createElement("div");
+    box.className = "azkar-box";
+
+    let text = document.createElement("div");
+    text.innerText = zekr.text;
+
+    let counter = document.createElement("div");
+    counter.className = "counter";
+
+    if (doneNames.includes(zekr.text)) {
+      counter.innerText = "تم يا معلم ✅";
+      counter.classList.add("done");
+    } else {
+      counter.innerText = currentCount;
+    }
+
+    counter.addEventListener("click", async () => {
+  if (currentCount > 1) {
+    currentCount--;
+    counter.innerText = currentCount;
+  } else if (currentCount === 1) {
+
+    await supabaseClient
+      .from("daily_actions")
+      .insert({
+        user_id: user.id,
+        action_type: "evening",
+        action_name: zekr.text,
+        action_date: today
+      });
+
+    currentCount = 0;
+    counter.innerText = "تم يا معلم ✅";
+    counter.classList.add("done", "shake");
+
+    await addPoints(5);
+    await updateEveningProgress();
+  }
+});
+
+    let pBadge = document.createElement("div");
+    pBadge.style.marginTop = "12px";
+    pBadge.style.display = "inline-block";
+    pBadge.style.padding = "6px 10px";
+    pBadge.style.borderRadius = "12px";
+    pBadge.style.background = "rgba(232,176,74,0.12)";
+    pBadge.style.color = "#E8B04A";
+    pBadge.style.fontWeight = "bold";
+    pBadge.style.fontSize = "14px";
+    pBadge.innerText = `⭐ 5`;
+
+    box.appendChild(text);
+    box.appendChild(counter);
+    box.appendChild(pBadge);
+    eveningContainer.appendChild(box);
+  });
+
+  
+      await updateEveningProgress();
+
+  })();
+
+}
+/* ================= أذكار بعد الصلاة ================= */
+
+const prayerAzkar = [
+  {
+    text: `أستغفر الله، أستغفر الله، اللهم أنت السلام ومنك السلام، تباركت يا ذا الجلال والإكرام.`,
+    count: 1
+  },
+  {
+    text: `لا إله إلا الله وحده لا شريك له، له الملك وله الحمد وهو على كل شيء قدير، اللهم لا مانع لما أعطيت ولا معطي لما منعت ولا ينفع ذا الجد منك الجد.`,
+    count: 1
+  },
+  {
+    text: `لا إله إلا الله وحده لا شريك له، له الملك وله الحمد وهو على كل شيء قدير، ولا حول ولا قوة إلا بالله، لا إله إلا الله، ولا نعبد إلا إياه، له النعمة وله الفضل وله الثناء الحسن، لا إله إلا الله مخلصين له الدين ولو كره الكافرون.`,
+    count: 1
+  },
+ {
+  text: `آية الكرسي: اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ ۚ لَّهُ مَا فِي السَّمَاوَاتِ وَمَا فِي الْأَرْضِ ۗ مَن ذَا الَّذِي يَشْفَعُ عِندَهُ إِلَّا بِإِذْنِهِ ۚ يَعْلَمُ مَا بَيْنَ أَيْدِيهِمْ وَمَا خَلْفَهُمْ ۖ وَلَا يُحِيطُونَ بِشَيْءٍ مِّنْ عِلْمِهِ إِلَّا بِمَا شَاءَ ۚ وَسِعَ كُرْسِيُّهُ السَّمَاوَاتِ وَالْأَرْضَ ۖ وَلَا يَئُودُهُ حِفْظُهُمَا ۚ وَهُوَ الْعَلِيُّ الْعَظِيمُ`,
+  count: 1
+},
+  { text: `سبحان الله`, count: 33 },
+  { text: `الحمد لله`, count: 33 },
+  { text: `الله أكبر`, count: 33 },
+  {
+    text: `لا إله إلا الله وحده لا شريك له، له الملك وله الحمد وهو على كل شيء قدير.`,
+    count: 1
+  },
+ {
+  text: `قُلْ هُوَ اللَّهُ أَحَدٌ اللَّهُ الصَّمَدُ لَمْ يَلِدْ وَلَمْ يُولَدْ وَلَمْ يَكُن لَّهُ كُفُوًا أَحَدٌ`,
+  count: 1
+},
+  {
+  text: `قُلْ أَعُوذُ بِرَبِّ الْفَلَقِ مِن شَرِّ مَا خَلَقَ وَمِن شَرِّ غَاسِقٍ إِذَا وَقَبَ وَمِن شَرِّ النَّفَّاثَاتِ فِي الْعُقَدِ وَمِن شَرِّ حَاسِدٍ إِذَا حَسَدَ`,
+  count: 1
+},
+ {
+  text: `قُلْ أَعُوذُ بِرَبِّ النَّاسِ مَلِكِ النَّاسِ إِلَٰهِ النَّاسِ مِن شَرِّ الْوَسْوَاسِ الْخَنَّاسِ الَّذِي يُوَسْوِسُ فِي صُدُورِ النَّاسِ مِنَ الْجِنَّةِ وَالنَّاسِ`,
+  count: 1
+},
+  { text: `اللهم أعني على ذكرك وشكرك وحسن عبادتك.`, count: 1 }
+];
+function getCurrentPrayer() {
+  const hours = new Date().getHours();
+
+  if (hours >= 5 && hours < 12) return "fajr";
+  if (hours >= 12 && hours < 15) return "dhuhr";
+  if (hours >= 15 && hours < 18) return "asr";
+  if (hours >= 18 && hours < 20) return "maghrib";
+  return "isha";
+}
+
+const currentPrayer = getCurrentPrayer();
+
+const prayerContainer = document.getElementById("prayerContainer");
+const prayerDone = document.getElementById("prayerDone");
+const prayerTotal = document.getElementById("prayerTotal");
+const prayerPercent = document.getElementById("prayerPercent");
+const prayerProgressFill = document.getElementById("prayerProgressFill");
+
+async function updatePrayerProgress() {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+if (!user) return;
+
+const today = new Date().toISOString().split("T")[0];
+
+const { data } = await supabaseClient
+  .from("daily_actions")
+  .select("*")
+  .eq("user_id", user.id)
+  .eq("action_type", "prayer_azkar")
+  .eq("action_date", today);
+
+let done = data ? data.length : 0;
+
+  let total = prayerAzkar.length;
+  let percent = Math.round((done / total) * 100);
+
+  if (prayerDone) prayerDone.innerText = done;
+  if (prayerTotal) prayerTotal.innerText = total;
+  if (prayerPercent) prayerPercent.innerText = percent;
+  if (prayerProgressFill) prayerProgressFill.style.width = percent + "%";
+
+  // ✅ لما يخلص كل الأذكار
+  if (percent === 100) {
+
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) return;
+
+    const today = new Date().toISOString().split("T")[0];
+
+    const { error } = await supabaseClient
+      .from("daily_actions")
+      .insert({
+        user_id: user.id,
+        action_type: "prayer",
+        action_name: currentPrayer,
+        action_date: today
+      });
+
+    // لو اتسجل لأول مرة بس
+    if (!error) {
+      await addPoints(5);
+    }
+  }
+}
+
+
+ if (prayerContainer) {
+
+  (async () => {
+
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) return;
+
+    const today = new Date().toISOString().split("T")[0];
+
+    const { data: doneAzkar } = await supabaseClient
+      .from("daily_actions")
+      .select("action_name")
+      .eq("user_id", user.id)
+      .eq("action_type", "prayer_azkar")
+      .eq("action_date", today);
+
+    const doneNames = doneAzkar ? doneAzkar.map(z => z.action_name) : [];
+
+    prayerAzkar.forEach((zekr, index) => {
+
+  let currentCount = zekr.count;
+
+    let box = document.createElement("div");
+    box.className = "azkar-box";
+
+    let text = document.createElement("div");
+    text.innerText = zekr.text;
+
+    let counter = document.createElement("div");
+    counter.className = "counter";
+
+    if (doneNames.includes(zekr.text)) {
+      counter.innerText = "تم يا معلم ✅";
+      counter.classList.add("done");
+    } else {
+      counter.innerText = currentCount;
+    }
+
+    counter.addEventListener("click", async () => {
+      if (currentCount > 1) {
+        currentCount--;
+        counter.innerText = currentCount;
+        
+      } else if (currentCount === 1) {
+        currentCount = 0;
+        await supabaseClient
+  .from("daily_actions")
+  .insert({
+    user_id: user.id,
+   action_type: "prayer_azkar",
+    action_name: zekr.text,
+    action_date: today
+  });
+        counter.innerText = "تم يا معلم ✅";
+        counter.classList.add("done", "shake");
+        
+        await addPoints(5);
+        updatePrayerProgress();
+      }
+    });
+
+    let pBadge = document.createElement("div");
+    pBadge.style.marginTop = "12px";
+    pBadge.style.display = "inline-block";
+    pBadge.style.padding = "6px 10px";
+    pBadge.style.borderRadius = "12px";
+    pBadge.style.background = "rgba(232,176,74,0.12)";
+    pBadge.style.color = "#E8B04A";
+    pBadge.style.fontWeight = "bold";
+    pBadge.style.fontSize = "14px";
+    pBadge.innerText = `⭐ 5`;
+
+    box.appendChild(text);
+    box.appendChild(counter);
+    box.appendChild(pBadge);
+    prayerContainer.appendChild(box);
+  });
+
+  
+      await updatePrayerProgress();
+
+  })();
+
+}
